@@ -1,0 +1,24 @@
+# === Etapa 1: Build ===
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copiamos el archivo csproj y restauramos paquetes
+COPY ["MiApi.csproj", "./"]
+RUN dotnet restore
+
+# Copiamos todo el código y lo compilamos
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# === Etapa 2: Runtime ===
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+# Copiamos lo publicado desde la etapa de build
+COPY --from=build /app/publish .
+
+# Exponemos el puerto del contenedor
+EXPOSE 8080
+
+# Comando de inicio
+ENTRYPOINT ["dotnet", "MiApi.dll"]
